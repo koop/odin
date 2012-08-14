@@ -22,6 +22,9 @@
 			raises(block, [expected], [message])
 	*/
 
+	var Event = wp.Event,
+		Events = wp.Events;
+
 	module( 'Events', {
 		setup: function() {
 			this.events = new Events();

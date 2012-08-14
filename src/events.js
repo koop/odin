@@ -6,10 +6,12 @@
  * Licensed under the GPL license, version 2 or greater.
  */
 
-var Event, Events;
+if ( typeof wp === 'undefined' )
+	var wp = {};
 
-(function( _ ) {
-	var slice = Array.prototype.slice;
+(function( exports, _ ) {
+	var Event, Events,
+		slice = Array.prototype.slice;
 
 	/**
 	 * EVENT
@@ -289,4 +291,8 @@ var Event, Events;
 		};
 	});
 
-}( _ ) );
+	// Share Event and Events with the world.
+	exports.Event  = Event;
+	exports.Events = Events;
+
+}( wp, _ ) );
