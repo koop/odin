@@ -167,7 +167,7 @@
 		this.events.recorded(['a','a.x','a.y','a.x.y','a.y.x','b','b.x','b.y','b.x.y','b.y.x']);
 	});
 
-	module( 'Priority – Implicit', {
+	module( 'Priority - Implicit', {
 		setup: function() {
 			this.events = new Events();
 		}
@@ -185,7 +185,7 @@
 		deepEqual( triggered, _.range( 1, 6 ), 'implicit priorities correct' );
 	});
 
-	module( 'Priority – Explicit', {
+	module( 'Priority - Explicit', {
 		setup: function() {
 			this.events = new Events();
 
@@ -236,7 +236,7 @@
 		this.events.recorded([ 3, 6 ]);
 	});
 
-	module( 'Trigger – Reduce', {
+	module( 'Trigger - Reduce', {
 		setup: function() {
 			this.events = new Events();
 		}
