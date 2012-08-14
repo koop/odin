@@ -239,9 +239,6 @@
 	module( 'Trigger – Reduce', {
 		setup: function() {
 			this.events = new Events();
-			this.events.reduce = function( events, args ) {
-				return this.trigger.call( this, events, 'reduce', args );
-			};
 		}
 	});
 
@@ -267,7 +264,7 @@
 			return value.x + value.y;
 		});
 
-		strictEqual( this.events.reduce( 'gamut', [ 0 ] ), 30, 'reduce successful' );
+		strictEqual( this.events.reduce( 'gamut', 0 ), 30, 'reduce successful' );
 	});
 
 }(jQuery));
