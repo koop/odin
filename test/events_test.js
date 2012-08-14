@@ -267,4 +267,34 @@
 		strictEqual( this.events.reduce( 'gamut', 0 ), 30, 'reduce successful' );
 	});
 
+	module( 'Global Event Loop', {
+		setup: function() {
+			this.events = new Events();
+		}
+	});
+
+	test( 'addAction / doActions / removeAction', 3, function() {
+		wp.addAction( 'a', function() {
+			ok( true, 'triggered action "a"' );
+		});
+		equal( wp.events.events.a.callbacks.length, 1, 'added action "a"' );
+		wp.doAction( 'a' );
+		wp.removeAction( 'a' );
+		equal( wp.events.events.a.callbacks.length, 0, 'removed action "a"' );
+	});
+
+	test( 'addFilter / applyFilters / removeFilter', 4, function() {
+		wp.addFilter( 'a', function( value ) {
+			strictEqual( value, 5, 'triggered filter "a"' );
+			return 20;
+		});
+		equal( wp.events.events.a.callbacks.length, 1, 'added filter "a"' );
+
+		var result = wp.applyFilters( 'a', 5 );
+		strictEqual( result, 20, 'correct result for filter "a"' );
+
+		wp.removeFilter( 'a' );
+		equal( wp.events.events.a.callbacks.length, 0, 'removed filter "a"' );
+	});
+
 }(jQuery));

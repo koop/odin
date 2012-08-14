@@ -295,4 +295,19 @@ if ( typeof wp === 'undefined' )
 	exports.Event  = Event;
 	exports.Events = Events;
 
+	/**
+	 * GLOBAL EVENT LOOP
+	 */
+	wp.events = new Events();
+
+	// Bind all functions of the global event loop to the wp.events object.
+	_.bindAll( wp.events );
+
+	wp.addAction    = wp.events.on;
+	wp.addFilter    = wp.events.on;
+	wp.removeAction = wp.events.off;
+	wp.removeFilter = wp.events.off;
+	wp.doAction     = wp.events.action;
+	wp.applyFilters = wp.events.filter;
+
 }( wp, _ ) );
