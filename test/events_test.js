@@ -192,13 +192,7 @@
 		record( 'count.three', [ 3, 6 ] );
 	});
 
-	module( 'Trigger - Reduce', {
-		setup: function() {
-			this.events = new Events();
-		}
-	});
-
-	test( 'reduce various values', function() {
+	test( 'reduce()', function() {
 		this.events.on( 'gamut', function( value ) {
 			strictEqual( value, 0 );
 			return true;
@@ -221,12 +215,6 @@
 		});
 
 		strictEqual( this.events.reduce( 'gamut', 0 ), 30, 'reduce successful' );
-	});
-
-	module( 'Global Event Loop', {
-		setup: function() {
-			this.events = new Events();
-		}
 	});
 
 	test( 'addAction / doActions / removeAction', 3, function() {
