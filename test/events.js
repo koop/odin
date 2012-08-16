@@ -1,7 +1,7 @@
 /*global QUnit:false, module:false, test:false, asyncTest:false, expect:false*/
 /*global start:false, stop:false ok:false, equal:false, notEqual:false, deepEqual:false*/
 /*global notDeepEqual:false, strictEqual:false, notStrictEqual:false, raises:false*/
-(function($) {
+(function( exports, _, $ ) {
 
 	/*
 		======== A Handy Little QUnit Reference ========
@@ -22,8 +22,8 @@
 			raises(block, [expected], [message])
 	*/
 
-	var Event = wp.Event,
-		Events = wp.Events;
+	var Event = exports.Event,
+		Events = exports.Events;
 
 	module( 'Events', {
 		setup: function() {
@@ -219,27 +219,27 @@
 	});
 
 	test( 'addAction / doActions / removeAction', 3, function() {
-		wp.addAction( 'a', function() {
+		exports.addAction( 'a', function() {
 			ok( true, 'triggered action "a"' );
 		});
-		equal( wp.events.events.a.callbacks.length, 1, 'added action "a"' );
-		wp.doAction( 'a' );
-		wp.removeAction( 'a' );
-		equal( wp.events.events.a.callbacks.length, 0, 'removed action "a"' );
+		equal( exports.events.events.a.callbacks.length, 1, 'added action "a"' );
+		exports.doAction( 'a' );
+		exports.removeAction( 'a' );
+		equal( exports.events.events.a.callbacks.length, 0, 'removed action "a"' );
 	});
 
 	test( 'addFilter / applyFilters / removeFilter', 4, function() {
-		wp.addFilter( 'a', function( value ) {
+		exports.addFilter( 'a', function( value ) {
 			strictEqual( value, 5, 'triggered filter "a"' );
 			return 20;
 		});
-		equal( wp.events.events.a.callbacks.length, 1, 'added filter "a"' );
+		equal( exports.events.events.a.callbacks.length, 1, 'added filter "a"' );
 
-		var result = wp.applyFilters( 'a', 5 );
+		var result = exports.applyFilters( 'a', 5 );
 		strictEqual( result, 20, 'correct result for filter "a"' );
 
-		wp.removeFilter( 'a' );
-		equal( wp.events.events.a.callbacks.length, 0, 'removed filter "a"' );
+		exports.removeFilter( 'a' );
+		equal( exports.events.events.a.callbacks.length, 0, 'removed filter "a"' );
 	});
 
-}(jQuery));
+}( wp, _, jQuery ));

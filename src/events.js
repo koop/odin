@@ -298,16 +298,16 @@ if ( typeof wp === 'undefined' )
 	/**
 	 * GLOBAL EVENT LOOP
 	 */
-	wp.events = new Events();
+	exports.events = new Events();
 
-	// Bind all functions of the global event loop to the wp.events object.
-	_.bindAll( wp.events );
+	// Bind all functions of the global event loop to the exports.events object.
+	_.bindAll( exports.events );
 
-	wp.addAction    = wp.events.on;
-	wp.addFilter    = wp.events.on;
-	wp.removeAction = wp.events.off;
-	wp.removeFilter = wp.events.off;
-	wp.doAction     = wp.events.action;
-	wp.applyFilters = wp.events.filter;
+	exports.addAction    = exports.events.on;
+	exports.addFilter    = exports.events.on;
+	exports.removeAction = exports.events.off;
+	exports.removeFilter = exports.events.off;
+	exports.doAction     = exports.events.action;
+	exports.applyFilters = exports.events.filter;
 
 }( wp, _ ) );
