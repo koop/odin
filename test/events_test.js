@@ -80,91 +80,62 @@
 		this.events.trigger( 'b' ); // Nothing should happen.
 	});
 
-	module( 'Namespaces', {
-		setup: function() {
-			this.events = new Events();
+	test( 'namespaces', function() {
+		var watching, record, recordTrigger, recordOff;
 
-			var triggered = [];
+		// Announce what we're watching.
+		watching = [ 'a', 'a.x', 'a.y', 'a.x.y', 'a.y.x', 'b', 'b.x', 'b.y', 'b.x.y', 'b.y.x' ];
+		ok( true, 'Watching [ ' + watching.join(', ') + ' ]' );
 
-			this.events.record = function( events ) {
-				_.each( events, function( event ) {
-					this.on( event, function() { triggered.push( event ); });
-				}, this );
-			};
+		// Order-insensitive.
+		record = function( expected, callback ) {
+			var events    = new Events(),
+				triggered = [];
 
-			// Order-insensitive
-			this.events.recorded = function( events ) {
-				events = _.uniq( events ).sort();
-				deepEqual( _.uniq( triggered ).sort(), events, 'recorded: ' + events.join(', ') );
-			};
+			// Register the various events to watch.
+			_.each( watching, function( event ) {
+				events.on( event, function() { triggered.push( event ); });
+			}, this );
 
-			this.events.record([ 'a', 'a.x', 'a.y', 'a.x.y', 'a.y.x', 'b', 'b.x', 'b.y', 'b.x.y', 'b.y.x' ]);
-		}
-	});
+			expected  = _.uniq( expected ).sort();
+			message = callback.apply( events );
 
-	test( 'trigger event "a"', 1, function() {
-		this.events.trigger( 'a' );
-		this.events.recorded(['a','a.x','a.y','a.x.y','a.y.x']);
-	});
+			deepEqual( _.uniq( triggered ).sort(), expected, message + ' and recorded [ ' + expected.join(', ')  + ' ]' );
+		};
 
-	test( 'trigger event "a.x"', 1, function() {
-		this.events.trigger( 'a.x' );
-		this.events.recorded(['a.x','a.x.y','a.y.x']);
-	});
+		recordTrigger = function( event, expected ) {
+			record( expected, function() {
+				this.trigger( event );
+				return 'Triggered "' + event + '"';
+			});
+		};
 
-	test( 'trigger event "a.x.y"', 1, function() {
-		this.events.trigger( 'a.x.y' );
-		this.events.recorded(['a.x.y','a.y.x']);
-	});
+		recordOff = function( remove, trigger, expected ) {
+			record( expected, function() {
+				this.off( remove );
+				this.trigger( trigger );
+				return 'Removed "' + remove + '", triggered "' + trigger + '"';
+			});
+		};
 
-	test( 'trigger event ".x"', 1, function() {
-		this.events.trigger( '.x' );
-		this.events.recorded([]);
-	});
+		// Trigger various combinations of namespaces.
+		recordTrigger( 'a',     ['a','a.x','a.y','a.x.y','a.y.x'] );
+		recordTrigger( 'a.x',   ['a.x','a.x.y','a.y.x'] );
+		recordTrigger( 'a.x.y', ['a.x.y','a.y.x'] );
+		recordTrigger( '.x',    [] );
+		recordTrigger( '',      [] );
 
-	test( 'remove "a"', 1, function() {
-		this.events.off( 'a' );
-		this.events.trigger( 'a' );
-		this.events.recorded([]);
-	});
+		// Remove various combinations of namespaces, then trigger an event.
+		recordOff( 'a',        'a', [] );
+		recordOff( 'a.x',      'a', ['a','a.y'] );
+		recordOff( 'a.x.y',    'a', ['a','a.x','a.y'] );
+		recordOff( 'a.none',   'a', ['a','a.x','a.y','a.x.y','a.y.x'] );
+		recordOff( 'a.x.none', 'a', ['a','a.x','a.y','a.x.y','a.y.x'] );
 
-	test( 'remove "a.x"', 1, function() {
-		this.events.off( 'a.x' );
-		this.events.trigger( 'a' );
-		this.events.recorded(['a','a.y']);
-	});
+		recordOff( '.x', 'a b', ['a','a.y','b','b.y'] );
+		// Removing the empty string should leave everything intact.
+		recordOff( '',   'a b', ['a','a.x','a.y','a.x.y','a.y.x','b','b.x','b.y','b.x.y','b.y.x'] );
 
-	test( 'remove "a.x.y"', 1, function() {
-		this.events.off( 'a.x.y' );
-		this.events.trigger( 'a' );
-		this.events.recorded(['a','a.x','a.y']);
-	});
-
-	test( 'remove "a.none"', 1, function() {
-		this.events.off( 'a.none' );
-		this.events.trigger( 'a' );
-		this.events.recorded(['a','a.x','a.y','a.x.y','a.y.x']);
-	});
-
-	test( 'remove "a.x.none"', 1, function() {
-		this.events.off( 'a.x.none' );
-		this.events.trigger( 'a' );
-		this.events.recorded(['a','a.x','a.y','a.x.y','a.y.x']);
-	});
-
-	test( 'remove ".x"', 1, function() {
-		this.events.off( '.x' );
-		this.events.trigger( 'a' );
-		this.events.trigger( 'b' );
-		this.events.recorded(['a','a.y','b','b.y']);
-	});
-
-	// Removing the empty string should leave everything intact.
-	test( 'remove ""', 1, function() {
-		this.events.off( '' );
-		this.events.trigger( 'a' );
-		this.events.trigger( 'b' );
-		this.events.recorded(['a','a.x','a.y','a.x.y','a.y.x','b','b.x','b.y','b.x.y','b.y.x']);
 	});
 
 	module( 'Priority - Implicit', {
