@@ -89,7 +89,8 @@
 
 		record = function( expected, callback ) {
 			var events    = new Events(),
-				triggered = [];
+				triggered = [],
+				message;
 
 			// Register the various events to watch.
 			_.each( watching, function( event ) {
