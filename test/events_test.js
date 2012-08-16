@@ -138,13 +138,7 @@
 
 	});
 
-	module( 'Priority - Implicit', {
-		setup: function() {
-			this.events = new Events();
-		}
-	});
-
-	test( 'trigger', function() {
+	test( 'implicit priority triggers in the correct order', function() {
 		var triggered = [];
 		_.each( _.range( 1, 6 ), function( index ) {
 			this.events.on( 'a', function() {
