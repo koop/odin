@@ -87,7 +87,6 @@
 		watching = [ 'a', 'a.x', 'a.y', 'a.x.y', 'a.y.x', 'b', 'b.x', 'b.y', 'b.x.y', 'b.y.x' ];
 		ok( true, 'Watching [ ' + watching.join(', ') + ' ]' );
 
-		// Order-insensitive.
 		record = function( expected, callback ) {
 			var events    = new Events(),
 				triggered = [];
@@ -100,6 +99,7 @@
 			expected  = _.uniq( expected ).sort();
 			message = callback.apply( events );
 
+			// Order-insensitive.
 			deepEqual( _.uniq( triggered ).sort(), expected, message + ' and recorded [ ' + expected.join(', ')  + ' ]' );
 		};
 
@@ -150,55 +150,46 @@
 		deepEqual( triggered, _.range( 1, 6 ), 'implicit priorities correct' );
 	});
 
-	module( 'Priority - Explicit', {
-		setup: function() {
-			this.events = new Events();
+	test( 'explicit priority', function() {
+		var watching, record,
+			// Creates an event name based on a priority.
+			priorityEvent = function( priority ) {
+				var event = [ 'count', priority ];
 
-			var triggered = [],
-				// Generate event based on priorty names.
-				priorityEvent = function( priority ) {
-					var event = [ 'count', priority ];
+				// Generate namespaces for odd, even, and multiples of three.
+				event.push( priority % 2 ? 'odd' : 'even' );
+				if ( 0 === (priority % 3) )
+					event.push('three');
 
-					// Generate namespaces for odd, even, and multiples of three.
-					event.push( priority % 2 ? 'odd' : 'even' );
-					if ( 0 === (priority % 3) )
-						event.push('three');
+				return event.join('.');
+			};
 
-					return event.join('.');
-				};
+		// Announce what we're watching.
+		watching = [ 6, 2, 1, 4, 5, 3 ];
+		ok( true, 'Watching [ ' + watching.join(', ') + ' ]' );
 
-			// Add out of order
+		record = function( trigger, priorities ) {
+			var events    = new Events(),
+				triggered = [],
+				expected;
+
+			// Register the various events to watch.
 			_.each([ 6, 2, 1, 4, 5, 3 ], function( priority ) {
 				var event = priorityEvent( priority );
-				this.events.on( event, function() { triggered.push( event ); }, priority );
+				events.on( event, function() { triggered.push( event ); }, priority );
 			}, this );
 
-			// Order-sensitive
-			this.events.recorded = function( priorities ) {
-				var events = _.map( priorities, priorityEvent );
-				deepEqual( triggered, events, 'recorded: ' + events.join(', ') );
-			};
-		}
-	});
+			expected = _.map( priorities, priorityEvent );
+			events.trigger( trigger );
 
-	test( 'trigger "count"', 1, function() {
-		this.events.trigger( 'count' );
-		this.events.recorded([ 1, 2, 3, 4, 5, 6 ]);
-	});
+			// Order-sensitive.
+			deepEqual( triggered, expected, 'Triggered "' + trigger + '" and recorded [ ' + priorities.join(', ')  + ' ]' );
+		};
 
-	test( 'trigger "count.odd"', 1, function() {
-		this.events.trigger( 'count.odd' );
-		this.events.recorded([ 1, 3, 5 ]);
-	});
-
-	test( 'trigger "count.even"', 1, function() {
-		this.events.trigger( 'count.even' );
-		this.events.recorded([ 2, 4, 6 ]);
-	});
-
-	test( 'trigger "count.three"', 1, function() {
-		this.events.trigger( 'count.three' );
-		this.events.recorded([ 3, 6 ]);
+		record( 'count', [ 1, 2, 3, 4, 5, 6 ] );
+		record( 'count.odd', [ 1, 3, 5 ] );
+		record( 'count.even', [ 2, 4, 6 ] );
+		record( 'count.three', [ 3, 6 ] );
 	});
 
 	module( 'Trigger - Reduce', {
