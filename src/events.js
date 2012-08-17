@@ -103,34 +103,6 @@ if ( typeof wp === 'undefined' )
 			return this;
 		},
 
-		// trigger( [filter], [iterator], [args] )
-		trigger: function( a, b, c ) {
-			var params = {};
-
-			// trigger( args )
-			if ( _.isArray( a ) ) {
-				params.args = a;
-
-			// trigger( iterator, [args] )
-			} else if ( _.isFunction( a ) || _.isString( a ) ) {
-				params.iterator = a;
-				params.args = b;
-
-			// trigger( filter, args )
-			} else if ( _.isArray( b ) ) {
-				params.filter = a;
-				params.args = b;
-
-			// trigger( filter, [iterator, [args]] )
-			} else {
-				params.filter = a;
-				params.iterator = b;
-				params.args = c;
-			}
-
-			return this.run( params );
-		},
-
 		/**
 		 * Runs the event.
 		 * Low level, flexible method.
@@ -309,16 +281,18 @@ if ( typeof wp === 'undefined' )
 			}, { idRequired: false });
 		},
 
-		// trigger( events, [iterator], [args] )
-		trigger: function( events, iterator, args ) {
-			return this.process( events, function( event, options ) {
-				return event.trigger( options, iterator, args );
+		// run( events, params )
+		run: function( events, params ) {
+			return this.process( events, function( event, filter ) {
+				return event.run( _.extend({ filter: filter }, params ) );
 			});
 		}
 	});
 
 	// Create shortcuts for default iterators
-	_.each( Event.prototype.iterators, function( iterator, method ) {
+	_.each( _.extend({
+		trigger: Event.prototype.iterators.each
+	}, Event.prototype.iterators ), function( iterator, method ) {
 
 		// Don't overwrite existing methods
 		if ( Events.prototype[ method ] )
@@ -326,7 +300,10 @@ if ( typeof wp === 'undefined' )
 
 		// iteratorName( events, args* )
 		Events.prototype[ method ] = function( events ) {
-			return this.trigger( events, method, _.rest( arguments ) );
+			return this.run( events, {
+				iterator: method,
+				args: _.rest( arguments )
+			});
 		};
 	});
 
