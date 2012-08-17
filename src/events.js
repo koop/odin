@@ -20,6 +20,7 @@ if ( typeof wp === 'undefined' )
 	Event = function( options ) {
 		_.extend( this, options );
 		this.callbacks = [];
+		this.context = this;
 	};
 
 
@@ -45,7 +46,7 @@ if ( typeof wp === 'undefined' )
 			});
 
 			// Cache the callback we'll actually use.
-			options.bound = _.bind( options.fn, options.context );
+			options.bound = options.context ? _.bind( options.fn, options.context ) : options.fn;
 
 			// Handle priorities using binary search.
 			// Thank you, underscore.js! Inspired by _.sortedIndex.
@@ -102,66 +103,104 @@ if ( typeof wp === 'undefined' )
 			return this;
 		},
 
-		// trigger( [options], [iterator], [args] )
-		trigger: function( options, iterator, args ) {
+		// trigger( [filter], [iterator], [args] )
+		trigger: function( a, b, c ) {
+			var params = {};
+
 			// trigger( args )
-			if ( _.isArray( options ) ) {
-				args     = options;
-				iterator = null;
-				options  = null;
+			if ( _.isArray( a ) ) {
+				params.args = a;
 
 			// trigger( iterator, [args] )
-			} else if ( _.isFunction( options ) || _.isString( options ) ) {
-				args     = iterator;
-				iterator = options;
-				options  = null;
+			} else if ( _.isFunction( a ) || _.isString( a ) ) {
+				params.iterator = a;
+				params.args = b;
 
-			// trigger( options, args )
-			} else if ( _.isArray( iterator ) ) {
-				args     = iterator;
-				iterator = null;
+			// trigger( filter, args )
+			} else if ( _.isArray( b ) ) {
+				params.filter = a;
+				params.args = b;
+
+			// trigger( filter, [iterator, [args]] )
+			} else {
+				params.filter = a;
+				params.iterator = b;
+				params.args = c;
 			}
+
+			return this.run( params );
+		},
+
+		/**
+		 * Runs the event.
+		 * Low level, flexible method.
+		 *
+		 * @param {object}   params     Optional. The parameters used to run the event.
+		 *
+		 *        {array}    args       Optional. The arguments to execute the callback with.
+		 *
+		 *        {mixed}    iterator   Optional. The function that runs the callbacks.
+		 *                              Can be a function or a string that corresponds to a function bound to 'this.iterators'.
+		 *                              Defaults to 'this.iterators.each'.
+		 *
+		 *        {object}   context    Optional. The context in which to call the function (the 'this' keyword).
+		 *                              This will not effect callbacks that have already been bound to a context.
+		 *
+		 *        {object}   filter     Optional. Properties used to filter the callbacks.
+		 *                              Only callbacks that match this structure will be used.
+		 *                              All properties are optional:
+		 *        +   {object}   namespace  An object with namespace keys mapped to 'true'.
+		 *        +   {function} fn         The callback function.
+		 *        +   {object}   context    The context in which to call the function (the 'this' keyword).
+		 *        +   {integer}  priority   The priority of the callback.
+		 */
+		run: function( params ) {
+			params = params || {};
 
 			// Iterator can either be a function, or a string that corresponds
 			// to a registered iterator.
-			if ( _.isString( iterator ) )
-				iterator = this.iterators[ iterator ];
-			iterator = iterator || this.iterators.each;
+			if ( _.isString( params.iterator ) )
+				params.iterator = this.iterators[ params.iterator ];
 
-			// Ensure args is an array
-			args = args || [];
+			// Fill in the defaults.
+			_.defaults( params, {
+				iterator: this.iterators.each,
+				context:  this.context,
+				filter:   {},
+				args:     []
+			});
 
 			// Filters the callbacks and prevents race conditions
 			// by not directly referring to this.callbacks.
 			// Then, pluck all of the bound callbacks so the iterator isn't
 			// accessing the direct object.
-			var callbacks = _.pluck( this._filter( options ), 'bound' );
+			var callbacks = _.pluck( this._filter( params.filter ), 'bound' );
 
-			return iterator.call( this, callbacks, args );
+			return params.iterator.call( this, callbacks, params.args, params.context );
 		},
 
 		iterators: {
-			each: function( callbacks, args ) {
+			each: function( callbacks, args, context ) {
 				_.each( callbacks, function( callback ) {
-					callback.apply( null, args );
+					callback.apply( context, args );
 				});
 			},
 
-			reduce: function( callbacks, args ) {
+			reduce: function( callbacks, args, context ) {
 				return _.reduce( callbacks, function( memo, callback ) {
-					return callback.apply( null, [ memo ].concat( args ) );
+					return callback.apply( context, [ memo ].concat( args ) );
 				}, args.shift() );
 			},
 
-			all: function( callbacks, args ) {
+			all: function( callbacks, args, context ) {
 				return _.all( callbacks, function( callback ) {
-					return !! callback.apply( null, args );
+					return !! callback.apply( context, args );
 				});
 			},
 
-			any: function( callbacks, args ) {
+			any: function( callbacks, args, context ) {
 				return _.any( callbacks, function( callback ) {
-					return !! callback.apply( null, args );
+					return !! callback.apply( context, args );
 				});
 			}
 		}
