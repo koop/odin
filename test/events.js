@@ -218,6 +218,42 @@
 		strictEqual( this.events.reduce( 'gamut', 0 ), 30, 'reduce successful' );
 	});
 
+	test( 'context', function() {
+		var event = new Event(),
+			context = {}, callback = {};
+
+		_.each({
+			all: 'change the context of all unbound callbacks',
+			explicit: 'change the callback for a single call',
+			bound: 'bound callbacks always use their originally bound context'
+		}, function( message, type ) {
+			context[ type ]  = { context: type };
+			callback[ type ] = function() {
+				strictEqual( this.context, type, message );
+			};
+		});
+
+		callback.standard = function() {
+			strictEqual( this, event, 'event uses itself as context by default' );
+		};
+
+		// Add bound callback before everything else.
+		event.add({ fn: callback.bound, context: context.bound });
+
+		event.add({ fn: callback.standard });
+		event.run();
+		event.remove({ fn: callback.standard });
+
+		event.context = context.all;
+		event.add({ fn: callback.all });
+		event.run();
+		event.remove({ fn: callback.all });
+
+		event.add({ fn: callback.explicit  });
+		event.run({ context: context.explicit });
+		event.remove({ fn: callback.explicit });
+	});
+
 	test( 'addAction / doActions / removeAction', 3, function() {
 		exports.addAction( 'a', function() {
 			ok( true, 'triggered action "a"' );
