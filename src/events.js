@@ -307,7 +307,7 @@ if ( typeof wp === 'undefined' )
 			});
 		};
 
-		// iteratorName( context, events, args* )
+		// iteratorNameWith( context, events, args* )
 		var methodWith = method + 'With';
 		// Don't overwrite existing methods
 		Events.prototype[ methodWith ] = Events.prototype[ methodWith ] || function( context, events ) {
