@@ -76,21 +76,26 @@
 		a.set( 'removed' );
 	});
 
-	test( 'props.pull() / props.unpull()', 4, function() {
+	test( 'props.pull() / props.unpull()', 6, function() {
 		this.props.add( 'master' );
 		this.props.add( 'slave' );
 
 		this.props.pull( 'slave', 'master' );
 		this.props.set( 'master', 'pulled' );
 
-		strictEqual( this.props.get( 'master' ), 'pulled' );
-		strictEqual( this.props.get( 'slave' ),  'pulled' );
+		strictEqual( this.props.get( 'master' ), 'pulled', 'master updated' );
+		strictEqual( this.props.get( 'slave' ),  'pulled', 'slave updated when master updated' );
+
+		this.props.set( 'slave', 'freedom' );
+
+		strictEqual( this.props.get( 'master' ), 'pulled',  'master unchanged when slave updated' );
+		strictEqual( this.props.get( 'slave' ),  'freedom', 'slave updated' );
 
 		this.props.unpull( 'slave', 'master' );
 		this.props.set( 'master', 'changed' );
 
-		strictEqual( this.props.get( 'master' ), 'changed' );
-		strictEqual( this.props.get( 'slave' ),  'pulled' );
+		strictEqual( this.props.get( 'master' ), 'changed', 'unpull() successful' );
+		strictEqual( this.props.get( 'slave' ),  'freedom', 'unpull() successful' );
 	});
 
 	test( 'props.sync() / props.unsync()', 6, function() {

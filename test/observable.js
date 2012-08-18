@@ -28,7 +28,7 @@
 		}
 	});
 
-	test( 'observable sets value', 1, function() {
+	test( 'observable.set() / observable.get()', 1, function() {
 		this.ob.set( 'test' );
 		equal( this.ob.get(), 'test' );
 	});
@@ -39,57 +39,41 @@
 		});
 		this.ob.set( 'test' );
 	});
-
-	test( 'pull operates correctly', 1, function() {
+	test( 'observable.pull() / observable.unpull()', 6, function() {
 		var slave = new exports.Observable();
 
 		slave.pull( this.ob );
 		this.ob.set( 'test' );
+		strictEqual( this.ob.get(), 'test', 'master updated' );
+		strictEqual( slave.get(),   'test', 'slave updated when master updated' );
 
-		equal( slave.get(), 'test' );
-	});
+		slave.set( 'freedom' );
+		strictEqual( this.ob.get(), 'test',    'master unchanged when slave updated' );
+		strictEqual( slave.get(),   'freedom', 'slave updated' );
 
-	test( 'unpull operates correctly', 1, function() {
-		var slave = new exports.Observable();
-
-		slave.pull( this.ob );
 		slave.unpull( this.ob );
-		this.ob.set( 'test' );
-
-		equal( slave.get(), undefined );
+		this.ob.set( 'changed' );
+		strictEqual( this.ob.get(), 'changed', 'unpull() successful' );
+		strictEqual( slave.get(),   'freedom', 'unpull() successful' );
 	});
 
-	test( 'sync operates correctly', 4, function() {
+	test( 'observable.sync() / observable.unsync()', 6, function() {
 		var partner = new exports.Observable();
 
 		partner.sync( this.ob );
 		this.ob.set( 1 );
 
-		strictEqual( partner.get(), 1 );
-		strictEqual( this.ob.get(), 1 );
+		strictEqual( partner.get(), 1, 'synchronized when first value is set' );
+		strictEqual( this.ob.get(), 1, 'synchronized when first value is set' );
 
 		partner.set( 2 );
-		strictEqual( partner.get(), 2 );
-		strictEqual( this.ob.get(), 2 );
-	});
-
-	test( 'unsync operates correctly', 6, function() {
-		var partner = new exports.Observable();
-
-		partner.sync( this.ob );
-		this.ob.set( 1 );
-
-		strictEqual( partner.get(), 1 );
-		strictEqual( this.ob.get(), 1 );
-
-		partner.set( 2 );
-		strictEqual( partner.get(), 2 );
-		strictEqual( this.ob.get(), 2 );
+		strictEqual( partner.get(), 2, 'synchronized when second value is set' );
+		strictEqual( this.ob.get(), 2, 'synchronized when second value is set' );
 
 		partner.unsync( this.ob );
 		partner.set( 3 );
-		strictEqual( partner.get(), 3 );
-		strictEqual( this.ob.get(), 2 );
+		strictEqual( partner.get(), 3, 'unpull() successful' );
+		strictEqual( this.ob.get(), 2, 'unsync() successful' );
 	});
 
 }( wp, _, jQuery ));
