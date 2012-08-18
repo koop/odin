@@ -39,6 +39,7 @@
 		});
 		this.ob.set( 'test' );
 	});
+
 	test( 'observable.pull() / observable.unpull()', 6, function() {
 		var slave = new exports.Observable();
 
