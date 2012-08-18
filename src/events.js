@@ -189,7 +189,8 @@ if ( typeof wp === 'undefined' )
 	 * EVENTS
 	 */
 
-	Events = function() {
+	Events = function( options ) {
+		_.extend( this, options );
 		this.events = {};
 	};
 
@@ -283,6 +284,10 @@ if ( typeof wp === 'undefined' )
 
 		// run( events, params )
 		run: function( events, params ) {
+			// Use the Events instance context if a context isn't specified.
+			if ( this.context && ! params.context )
+				params.context = this.context;
+
 			return this.process( events, function( event, filter ) {
 				return event.run( _.extend({ filter: filter }, params ) );
 			});
@@ -311,6 +316,14 @@ if ( typeof wp === 'undefined' )
 				iterator: method,
 				args: _.rest( arguments, 2 )
 			});
+		};
+	});
+
+	Events.mixin = {};
+	_.each(['on','off','once','trigger','triggerWith'], function( method ) {
+		Events.mixin[ method ] = function() {
+			var events = this.events = this.events || new Events({ context: this });
+			return events[ method ].apply( events, arguments );
 		};
 	});
 
