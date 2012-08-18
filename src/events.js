@@ -290,19 +290,26 @@ if ( typeof wp === 'undefined' )
 	});
 
 	// Create shortcuts for default iterators
-	_.each( _.extend({
+	_.chain({
 		trigger: Event.prototype.iterators.each
-	}, Event.prototype.iterators ), function( iterator, method ) {
-
-		// Don't overwrite existing methods
-		if ( Events.prototype[ method ] )
-			return;
-
+	}).extend( Event.prototype.iterators ).each( function( iterator, method ) {
 		// iteratorName( events, args* )
-		Events.prototype[ method ] = function( events ) {
+		// Don't overwrite existing methods
+		Events.prototype[ method ] = Events.prototype[ method ] || function( events ) {
 			return this.run( events, {
 				iterator: method,
 				args: _.rest( arguments )
+			});
+		};
+
+		// iteratorName( context, events, args* )
+		var methodWith = method + 'With';
+		// Don't overwrite existing methods
+		Events.prototype[ methodWith ] = Events.prototype[ methodWith ] || function( context, events ) {
+			return this.run( events, {
+				context: context,
+				iterator: method,
+				args: _.rest( arguments, 2 )
 			});
 		};
 	});
