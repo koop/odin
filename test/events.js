@@ -278,4 +278,4 @@
 		equal( exports.events.events.a.callbacks.length, 0, 'removed filter "a"' );
 	});
 
-}( wp, _, jQuery ));
+}( Odin, _, jQuery ));

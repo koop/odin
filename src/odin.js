@@ -1,15 +1,23 @@
-/*
- * events
- * https://github.com/koop/events
- *
- * Copyright (c) 2012 Daryl Koopersmith
- * Licensed under the GPL license, version 2 or greater.
- */
+/*! Odin - v0.1.0 - 2012-08-20
+* https://github.com/koop/odin
+* Copyright (c) 2012 Daryl Koopersmith; Licensed GPL v2 or later */
 
-if ( typeof wp === 'undefined' )
-	var wp = {};
+(function( _, $ ){
+	var Odin,
+		root = this,
+		_Odin = root.Odin;
 
-(function( exports, _ ) {
+	if ( typeof exports !== 'undefined' ) {
+		Odin = exports;
+	} else {
+		Odin = root.Odin = {};
+	}
+
+	Odin.noConflict = function() {
+		root.Odin = _Odin;
+		return Odin;
+	};
+
 	var Event, Events,
 		slice = Array.prototype.slice;
 
@@ -328,22 +336,194 @@ if ( typeof wp === 'undefined' )
 	});
 
 	// Share Event and Events with the world.
-	exports.Event  = Event;
-	exports.Events = Events;
+	Odin.Event  = Event;
+	Odin.Events = Events;
 
 	/**
 	 * GLOBAL EVENT LOOP
 	 */
-	exports.events = new Events();
+	Odin.events = new Events();
 
-	// Bind all functions of the global event loop to the exports.events object.
-	_.bindAll( exports.events );
+	// Bind all functions of the global event loop to the Odin.events object.
+	_.bindAll( Odin.events );
 
-	exports.addAction    = exports.events.on;
-	exports.addFilter    = exports.events.on;
-	exports.removeAction = exports.events.off;
-	exports.removeFilter = exports.events.off;
-	exports.doAction     = exports.events.action;
-	exports.applyFilters = exports.events.filter;
+	Odin.addAction    = Odin.events.on;
+	Odin.addFilter    = Odin.events.on;
+	Odin.removeAction = Odin.events.off;
+	Odin.removeFilter = Odin.events.off;
+	Odin.doAction     = Odin.events.action;
+	Odin.applyFilters = Odin.events.filter;
 
-}( wp, _ ) );
+	var Observable = function() {
+		this.set.apply( this, arguments );
+	};
+
+	_.extend( Observable.prototype, Odin.Events.mixin, {
+		get: function() {
+			return this._value;
+		},
+
+		update: function( to ) {
+			this._value = to;
+			return this;
+		},
+
+		set: function( to ) {
+			var from = this.get();
+
+			if ( from === to )
+				return this;
+
+			this.update.apply( this, arguments );
+			to = this.get();
+
+			this.trigger( 'change', to, from );
+			return this;
+		},
+
+		_proxiedSet: function() {
+			if ( ! this.__proxiedSet )
+				this.__proxiedSet = _.bind( this.set, this );
+			return this.__proxiedSet;
+		},
+
+		pull: function() {
+			var set = this._proxiedSet();
+
+			_.each( arguments, function( target ) {
+				target.on( 'change', set );
+			});
+			return this;
+		},
+
+		unpull: function() {
+			var set = this._proxiedSet();
+
+			_.each( arguments, function( target ) {
+				target.off( 'change', set );
+			});
+			return this;
+		},
+
+		sync: function() {
+			var self = this;
+			_.each( arguments, function( target ) {
+				self.pull( target );
+				target.pull( self );
+			});
+			return this;
+		},
+
+		unsync: function() {
+			var self = this;
+			_.each( arguments, function( target ) {
+				self.unpull( target );
+				target.unpull( self );
+			});
+			return this;
+		}
+	});
+
+	// Sharing is caring.
+	Odin.Observable = Observable;
+	var Properties = function() {};
+
+	_.extend( Properties.prototype, Odin.Events.mixin, {
+		observable: function( key ) {
+			this.properties = this.properties || {};
+			if ( this.properties[ key ] )
+				return this.properties[ key ].observable;
+		},
+
+		add: function( key, observable ) {
+			var self = this,
+				change = function() {
+					self.trigger.apply( self, [ 'change:' + key ].concat( _.toArray( arguments ) ) );
+				};
+
+			// Do not replace existing properties.
+			// Calling observable() ensures this.properties exists.
+			if ( this.observable( key ) )
+				return this;
+
+			// add( key )
+			// If we don't have an observable, create an empty one.
+			observable = observable || new Odin.Observable();
+
+			// Track the observable and change:key callbacks.
+			this.properties[ key ] = {
+				observable: observable,
+				change: change
+			};
+
+			// Bind the change:key event.
+			observable.on( 'change', change );
+
+			this.trigger( 'add:' + key + ' add', key, observable );
+			return this;
+		},
+
+		remove: function( key ) {
+			// Calling observable() ensures this.properties exists.
+			var observable = this.observable( key );
+
+			// Check if there is a property to remove.
+			if ( ! observable )
+				return this;
+
+			// Remove the change:key event.
+			observable.off( 'change', this.properties[ key ].change );
+			delete this.properties[ key ];
+
+			this.trigger( 'remove:' + key + ' remove', key, observable );
+			return this;
+		},
+
+		set: function( key ) {
+			var self = this,
+				observable;
+
+			// Handle { key: value } objects.
+			if ( _.isObject( key ) ) {
+				_.each( key, function( v, k ) {
+					self.set( k, v );
+				});
+				return this;
+			}
+
+			// Fetch the observable or create a new one.
+			observable = this.observable( key ) || this.add( key ).observable( key );
+			observable.set.apply( observable, _.rest( arguments ) );
+
+			// Trigger the change event.
+			// The change:key event is automatically triggered whenever
+			// the property is updated.
+			this.trigger( 'change', key, observable );
+			return this;
+		}
+	});
+
+	// Proxy observable methods over to each observable object.
+	_.each(['get','pull','unpull','sync','unsync'], function( method ) {
+		Properties.prototype[ method ] = function( key ) {
+			var observable = this.observable( key ),
+				observables, result;
+
+			if ( ! observable )
+				return;
+
+			// Try to convert arguments to observables (so we can use strings).
+			observables = _.chain( arguments ).rest().map( function( value ) {
+				return _.isObject( value ) ? value : this.observable( value );
+			}, this ).value();
+
+			// If the observable returns itself, return this instead.
+			result = observable[ method ].apply( observable, observables );
+			return result === observable ? this : result;
+		};
+	});
+
+	// Sharing is caring.
+	Odin.Properties = Properties;
+
+}( _, jQuery ));

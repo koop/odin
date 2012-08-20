@@ -3,7 +3,7 @@ module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
-    pkg: '<json:events.json>',
+    pkg: '<json:package.json>',
     meta: {
       banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
         '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
@@ -13,7 +13,7 @@ module.exports = function(grunt) {
     },
     concat: {
       dist: {
-        src: ['<banner:meta.banner>', '<file_strip_banner:src/<%= pkg.name %>.js>'],
+        src: ['<banner:meta.banner>','<file_strip_banner:src/<%= pkg.name %>.js>'],
         dest: 'dist/<%= pkg.name %>.js'
       }
     },
@@ -49,9 +49,10 @@ module.exports = function(grunt) {
         smarttabs: true
       },
       globals: {
-        jQuery: true,
         _: true,
-        wp: true
+        jQuery: true,
+        Odin: true,
+        exports: true
       }
     },
     uglify: {}
@@ -59,5 +60,7 @@ module.exports = function(grunt) {
 
   // Default task.
   grunt.registerTask('default', 'lint qunit concat min');
+
+  // grunt.loadNpmTasks('grunt-docco');
 
 };

@@ -77,4 +77,4 @@
 		strictEqual( this.ob.get(), 2, 'unsync() successful' );
 	});
 
-}( wp, _, jQuery ));
+}( Odin, _, jQuery ));

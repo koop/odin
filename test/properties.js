@@ -118,4 +118,4 @@
 		strictEqual( this.props.get( 'yang' ), 3, 'unsync() successful' );
 	});
 
-}( wp, _, jQuery ));
+}( Odin, _, jQuery ));
