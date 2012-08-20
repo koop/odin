@@ -1,6 +1,10 @@
-/*! Odin - v0.1.0 - 2012-08-20
-* https://github.com/koop/odin
-* Copyright (c) 2012 Daryl Koopersmith; Licensed GPL v2 or later */
+/*
+ * odin
+ * https://github.com/koop/odin
+ *
+ * Copyright (c) 2012 Daryl Koopersmith
+ * Licensed under the GPL license, version 2 or greater.
+ */
 
 (function( _, $ ){
 	var Odin,
@@ -354,6 +358,11 @@
 	Odin.doAction     = Odin.events.action;
 	Odin.applyFilters = Odin.events.filter;
 
+
+	/**
+	 * OBSERVABLE
+	 */
+
 	var Observable = function() {
 		this.set.apply( this, arguments );
 	};
@@ -426,7 +435,14 @@
 
 	// Sharing is caring.
 	Odin.Observable = Observable;
-	var Properties = function() {};
+
+	/**
+	 * PROPERTIES
+	 */
+
+	var Properties = function( properties ) {
+		this.set( properties );
+	};
 
 	_.extend( Properties.prototype, Odin.Events.mixin, {
 		observable: function( key ) {
