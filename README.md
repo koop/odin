@@ -1,6 +1,6 @@
-# Events
+# Odin
 
-An events API designed for WordPress.
+JavaScript data structures for WordPress.
 
 ## License
 Copyright (c) 2012 Daryl Koopersmith
