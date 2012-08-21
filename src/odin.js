@@ -331,10 +331,15 @@
 		};
 	});
 
-	Events.mixin = {};
+	Events.mixin = {
+		events: function() {
+			return this._events = this._events || new Events({ context: this });
+		}
+	};
+
 	_.each(['on','off','once','trigger','triggerWith'], function( method ) {
 		Events.mixin[ method ] = function() {
-			var events = this.events = this.events || new Events({ context: this });
+			var events = this.events();
 			return events[ method ].apply( events, arguments );
 		};
 	});
